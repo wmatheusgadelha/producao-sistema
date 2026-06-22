@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produção — Qualimpel</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary: #1a56a0;
+  --primary-dark: #134080;
+  --secondary: #f97316;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --sidebar-w: 230px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+
+/* ── LOGIN ── */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg,#1a56a0 0%,#0f3460 100%); }
+.login-box { background:#fff; border-radius:16px; padding:48px 40px; width:380px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+.login-logo { text-align:center; margin-bottom:28px; }
+.login-logo h1 { color:var(--primary); font-size:22px; font-weight:700; }
+.login-logo p { color:var(--text-muted); font-size:13px; margin-top:4px; }
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px; }
+.form-group input, .form-group select, .form-group textarea {
+  width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px;
+  font-size:14px; transition:border-color .2s; background:#fff;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline:none; border-color:var(--primary);
+}
+.btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-dark); }
+.btn-success { background:var(--success); color:#fff; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-warning { background:var(--warning); color:#fff; }
+.btn-outline { background:transparent; color:var(--primary); border:1.5px solid var(--primary); }
+.btn-sm { padding:6px 14px; font-size:13px; }
+.btn-block { width:100%; justify-content:center; }
+.error-msg { color:var(--danger); font-size:13px; margin-top:8px; display:none; }
+
+/* ── LAYOUT ── */
+#app { display:none; min-height:100vh; }
+.sidebar {
+  position:fixed; left:0; top:0; bottom:0; width:var(--sidebar-w);
+  background:linear-gradient(180deg,#1a56a0 0%,#0f3460 100%);
+  display:flex; flex-direction:column; z-index:100;
+}
+.sidebar-header { padding:20px 16px; border-bottom:1px solid rgba(255,255,255,.1); }
+.sidebar-header h2 { color:#fff; font-size:15px; font-weight:700; }
+.sidebar-header p { color:rgba(255,255,255,.6); font-size:11px; margin-top:2px; }
+.sidebar nav { flex:1; padding:12px 8px; overflow-y:auto; }
+.nav-section { font-size:10px; font-weight:700; color:rgba(255,255,255,.4); text-transform:uppercase; letter-spacing:.8px; padding:16px 8px 6px; }
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px;
+  color:rgba(255,255,255,.75); font-size:13px; font-weight:500; cursor:pointer; margin-bottom:2px; transition:all .2s;
+}
+.nav-item:hover, .nav-item.active { background:rgba(255,255,255,.15); color:#fff; }
+.sidebar-footer { padding:12px; border-top:1px solid rgba(255,255,255,.1); }
+.user-info { display:flex; align-items:center; gap:10px; padding:8px; border-radius:8px; cursor:pointer; }
+.user-info:hover { background:rgba(255,255,255,.1); }
+.avatar { width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; }
+.user-details { flex:1; }
+.user-details .name { color:#fff; font-size:13px; font-weight:600; }
+.user-details .role { color:rgba(255,255,255,.5); font-size:11px; }
+
+.main-content { margin-left:var(--sidebar-w); padding:24px; min-height:100vh; }
+.page { display:none; }
+.page.active { display:block; }
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+.page-header h1 { font-size:22px; font-weight:700; }
+.page-header p { color:var(--text-muted); font-size:14px; margin-top:2px; }
+
+/* ── CARDS ── */
+.cards-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+.kpi-card { background:var(--card); border-radius:12px; padding:20px; border:1px solid var(--border); }
+.kpi-card .label { font-size:12px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+.kpi-card .value { font-size:28px; font-weight:700; margin:8px 0 4px; }
+.kpi-card .sub { font-size:12px; color:var(--text-muted); }
+.kpi-card.blue .value { color:var(--primary); }
+.kpi-card.green .value { color:var(--success); }
+.kpi-card.orange .value { color:var(--secondary); }
+.kpi-card.red .value { color:var(--danger); }
+
+/* ── CHARTS ── */
+.charts-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:16px; margin-bottom:24px; }
+.chart-card { background:var(--card); border-radius:12px; padding:20px; border:1px solid var(--border); }
+.chart-card h3 { font-size:14px; font-weight:700; margin-bottom:16px; color:var(--text); }
+.chart-wrapper { position:relative; height:220px; }
+
+/* ── TABLE ── */
+.table-card { background:var(--card); border-radius:12px; border:1px solid var(--border); overflow:hidden; margin-bottom:16px; }
+.table-card-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.table-card-header h3 { font-size:14px; font-weight:700; }
+table { width:100%; border-collapse:collapse; }
+th { background:#f8fafc; padding:10px 16px; text-align:left; font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); }
+td { padding:12px 16px; font-size:13px; border-bottom:1px solid var(--border); }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:#f8fafc; }
+
+/* ── BADGES ── */
+.badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+.badge-green { background:#dcfce7; color:#166534; }
+.badge-red { background:#fee2e2; color:#991b1b; }
+.badge-orange { background:#ffedd5; color:#9a3412; }
+.badge-blue { background:#dbeafe; color:#1e40af; }
+.badge-gray { background:#f1f5f9; color:#475569; }
+.badge-yellow { background:#fef9c3; color:#854d0e; }
+
+/* ── MODAL ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+.modal-overlay.open { display:flex; }
+.modal { background:#fff; border-radius:16px; width:100%; max-width:750px; margin:auto; box-shadow:0 25px 80px rgba(0,0,0,.3); }
+.modal-header { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-header h2 { font-size:16px; font-weight:700; }
+.modal-close { background:none; border:none; font-size:22px; cursor:pointer; color:var(--text-muted); line-height:1; }
+.modal-body { padding:24px; }
+.modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
+
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+
+/* ── PARADAS ── */
+.paradas-list { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.parada-item { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; border-bottom:1px solid var(--border); background:#fafafa; }
+.parada-item:last-child { border-bottom:none; }
+.parada-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:#f1f5f9; border-bottom:1px solid var(--border); }
+.parada-header span { font-size:13px; font-weight:600; }
+.add-parada-btn { display:flex; align-items:center; gap:6px; padding:10px; cursor:pointer; color:var(--primary); font-size:13px; font-weight:600; background:#f0f9ff; border-radius:0 0 8px 8px; justify-content:center; border-top:1px dashed var(--border); }
+.add-parada-btn:hover { background:#dbeafe; }
+
+/* ── PRODUTIVIDADE GAUGE ── */
+.oee-display { display:flex; align-items:center; gap:20px; }
+.oee-circle { width:90px; height:90px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:700; border:5px solid; }
+.oee-circle.green { border-color:#16a34a; color:#16a34a; }
+.oee-circle.yellow { border-color:#d97706; color:#d97706; }
+.oee-circle.red { border-color:#dc2626; color:#dc2626; }
+.oee-circle .pct { font-size:20px; }
+.oee-circle .lbl { font-size:9px; color:var(--text-muted); }
+.oee-breakdown { flex:1; }
+.oee-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.oee-row span { font-size:12px; color:var(--text-muted); }
+.oee-bar-wrap { width:120px; height:8px; background:#e2e8f0; border-radius:4px; }
+.oee-bar { height:100%; border-radius:4px; background:var(--primary); }
+
+/* ── FILTERS BAR ── */
+.filters-bar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:20px; background:var(--card); padding:14px 16px; border-radius:10px; border:1px solid var(--border); }
+.filters-bar label { font-size:12px; font-weight:600; color:var(--text-muted); }
+.filters-bar input, .filters-bar select { padding:7px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:13px; }
+
+/* ── PERIODO TOGGLE ── */
+.periodo-toggle { display:flex; gap:4px; }
+.periodo-btn { padding:6px 14px; border:1.5px solid var(--border); border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; background:#fff; color:var(--text-muted); transition:all .2s; }
+.periodo-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+/* ── CAPACIDADE TABLE ── */
+.linha-header { background:linear-gradient(90deg,var(--primary) 0%,var(--primary-dark) 100%); color:#fff; padding:10px 16px; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:space-between; }
+.cap-not-validated { opacity:.7; }
+.tag-nv { background:#fef9c3; color:#854d0e; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700; }
+
+/* ── TABS ── */
+.tabs { display:flex; gap:4px; margin-bottom:20px; border-bottom:2px solid var(--border); }
+.tab { padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer; color:var(--text-muted); border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .2s; }
+.tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
+
+.loading { text-align:center; padding:40px; color:var(--text-muted); font-size:14px; }
+.empty { text-align:center; padding:40px; color:var(--text-muted); }
+.empty h3 { font-size:16px; margin-bottom:8px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>⚙️ Sistema de Produção</h1>
+      <p>Qualimpel Indústria Química</p>
+    </div>
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com" value="admin@producao.com">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-password" placeholder="••••••••" value="admin123">
+    </div>
+    <div class="error-msg" id="login-error">E-mail ou senha incorretos.</div>
+    <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>⚙️ Produção</h2>
+      <p>Qualimpel ERP</p>
+    </div>
+    <nav>
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">📊 Dashboard</div>
+      <div class="nav-section">Envase</div>
+      <div class="nav-item" onclick="showPage('envase-list')">📋 Relatórios Envase</div>
+      <div class="nav-item" onclick="showPage('envase-new')">➕ Novo Relatório Envase</div>
+      <div class="nav-section">Manipulação</div>
+      <div class="nav-item" onclick="showPage('manip-list')">📋 Relatórios Manipulação</div>
+      <div class="nav-item" onclick="showPage('manip-new')">➕ Novo Relatório Manipulação</div>
+      <div class="nav-section" id="admin-section">Administração</div>
+      <div class="nav-item" id="nav-capacidade" onclick="showPage('capacidade')">🏭 Base de Capacidade</div>
+      <div class="nav-item" id="nav-users" onclick="showPage('users')">👥 Usuários</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" onclick="showPage('minha-conta')">
+        <div class="avatar" id="user-avatar">A</div>
+        <div class="user-details">
+          <div class="name" id="user-name">...</div>
+          <div class="role" id="user-role">...</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div><h1>Dashboard de Produção</h1><p>Visão geral dos indicadores operacionais</p></div>
+        <div class="periodo-toggle">
+          <button class="periodo-btn active" onclick="setPeriodo('hoje')">Hoje</button>
+          <button class="periodo-btn" onclick="setPeriodo('semana')">7 dias</button>
+          <button class="periodo-btn" onclick="setPeriodo('mes')">30 dias</button>
+        </div>
+      </div>
+
+      <!-- KPIs Envase -->
+      <div style="margin-bottom:10px"><span style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">📦 Envase</span></div>
+      <div class="cards-grid" id="kpi-envase">
+        <div class="kpi-card blue"><div class="label">Total Fardos</div><div class="value" id="kpi-fardos">—</div><div class="sub">fardos produzidos</div></div>
+        <div class="kpi-card green"><div class="label">Total KG Envasado</div><div class="value" id="kpi-kg-env">—</div><div class="sub">quilogramas</div></div>
+        <div class="kpi-card orange"><div class="label">OEE Médio</div><div class="value" id="kpi-oee">—</div><div class="sub">eficiência global</div></div>
+        <div class="kpi-card blue"><div class="label">Produtividade</div><div class="value" id="kpi-prod">—</div><div class="sub">vs. capacidade teórica</div></div>
+      </div>
+
+      <!-- KPIs Manipulação -->
+      <div style="margin-bottom:10px;margin-top:8px"><span style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">🧪 Manipulação</span></div>
+      <div class="cards-grid">
+        <div class="kpi-card green"><div class="label">Total KG Produzido</div><div class="value" id="kpi-kg-man">—</div><div class="sub">quilogramas</div></div>
+        <div class="kpi-card blue"><div class="label">Eficiência Média</div><div class="value" id="kpi-efic">—</div><div class="sub">tempo produtivo</div></div>
+        <div class="kpi-card orange"><div class="label">Relatórios Envase</div><div class="value" id="kpi-rels-env">—</div><div class="sub">turnos registrados</div></div>
+        <div class="kpi-card orange"><div class="label">Relatórios Manip.</div><div class="value" id="kpi-rels-man">—</div><div class="sub">turnos registrados</div></div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card"><h3>📈 Produção Diária (Fardos)</h3><div class="chart-wrapper"><canvas id="chart-fardos"></canvas></div></div>
+        <div class="chart-card"><h3>🔧 Paradas por Categoria — Envase</h3><div class="chart-wrapper"><canvas id="chart-paradas-env"></canvas></div></div>
+        <div class="chart-card"><h3>🎯 OEE por Linha</h3><div class="chart-wrapper"><canvas id="chart-oee-linha"></canvas></div></div>
+        <div class="chart-card"><h3>🧪 KG Manipulação Diário</h3><div class="chart-wrapper"><canvas id="chart-kg-man"></canvas></div></div>
+        <div class="chart-card"><h3>🏭 Produção por Linha</h3><div class="chart-wrapper"><canvas id="chart-prod-linha"></canvas></div></div>
+        <div class="chart-card"><h3>🔧 Paradas por Categoria — Manipulação</h3><div class="chart-wrapper"><canvas id="chart-paradas-man"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- ENVASE LIST -->
+    <div class="page" id="page-envase-list">
+      <div class="page-header">
+        <div><h1>Relatórios de Envase</h1><p>Histórico de turnos registrados</p></div>
+        <button class="btn btn-primary" onclick="showPage('envase-new')">➕ Novo Relatório</button>
+      </div>
+      <div class="filters-bar">
+        <label>Data início:</label><input type="date" id="flt-env-ini">
+        <label>Data fim:</label><input type="date" id="flt-env-fim">
+        <label>Linha:</label>
+        <select id="flt-env-linha"><option value="">Todas</option><option>1</option><option>2</option><option>3</option><option>4</option></select>
+        <label>Turno:</label>
+        <select id="flt-env-turno"><option value="">Todos</option><option>A</option><option>B</option><option>C</option></select>
+        <button class="btn btn-primary btn-sm" onclick="loadEnvaseList()">🔍 Filtrar</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Data</th><th>Turno</th><th>Linha</th><th>SKU / Produto</th><th>Operador</th><th>Fardos</th><th>KG</th><th>Produtividade</th><th>OEE</th><th>Paradas</th><th>Ações</th></tr></thead>
+          <tbody id="envase-tbody"><tr><td colspan="11" class="loading">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ENVASE NEW/EDIT -->
+    <div class="page" id="page-envase-new">
+      <div class="page-header">
+        <div><h1 id="envase-form-title">Novo Relatório de Envase</h1><p>Registro do turno de envase</p></div>
+        <button class="btn btn-outline" onclick="showPage('envase-list')">← Voltar</button>
+      </div>
+      <form id="envase-form" onsubmit="submitEnvase(event)">
+        <div class="table-card" style="margin-bottom:16px">
+          <div class="table-card-header"><h3>📋 Identificação do Turno</h3></div>
+          <div class="modal-body">
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group"><label>Data *</label><input type="date" id="env-data" required></div>
+              <div class="form-group"><label>Turno *</label>
+                <select id="env-turno" required><option value="">Selecione</option><option>A</option><option>B</option><option>C</option></select></div>
+            </div>
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group"><label>Linha *</label>
+                <select id="env-linha" required onchange="onLinhaChange()"><option value="">Selecione</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+              <div class="form-group"><label>SKU / Produto *</label>
+                <select id="env-sku" required onchange="onSkuChange()"><option value="">— selecione a linha —</option></select></div>
+            </div>
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group"><label>Operador(es)</label><input type="text" id="env-operador" placeholder="Nome do(s) operador(es)"></div>
+              <div class="form-group"><label>Tempo Disponível (min)</label><input type="number" id="env-tempo-disp" value="480" min="0"></div>
+            </div>
+            <div id="cap-teorica-display" style="display:none;background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;margin-bottom:16px">
+              <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px">📊 Capacidade Teórica (Base de Dados)</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px" id="cap-teorica-values"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-bottom:16px">
+          <div class="table-card-header"><h3>⏱️ Paradas do Turno</h3></div>
+          <div class="paradas-list" id="paradas-env-list"></div>
+          <div class="add-parada-btn" onclick="addParada('env')">➕ Adicionar Parada</div>
+        </div>
+
+        <div class="table-card" style="margin-bottom:16px">
+          <div class="table-card-header"><h3>⚖️ Check de Peso</h3></div>
+          <div class="modal-body">
+            <div class="form-row-3" style="margin-bottom:12px">
+              <div class="form-group"><label>Peso Alto — Unidades</label><input type="number" id="env-pa-un" min="0"></div>
+              <div class="form-group"><label>Peso Alto — KG</label><input type="number" step="0.001" id="env-pa-kg" min="0"></div>
+              <div></div>
+            </div>
+            <div class="form-row-3" style="margin-bottom:12px">
+              <div class="form-group"><label>Peso Bom — Unidades</label><input type="number" id="env-pb-un" min="0"></div>
+              <div class="form-group"><label>Peso Bom — KG</label><input type="number" step="0.001" id="env-pb-kg" min="0"></div>
+              <div></div>
+            </div>
+            <div class="form-row-3" style="margin-bottom:12px">
+              <div class="form-group"><label>Peso Baixo — Unidades</label><input type="number" id="env-pbx-un" min="0"></div>
+              <div class="form-group"><label>Peso Baixo — KG</label><input type="number" step="0.001" id="env-pbx-kg" min="0"></div>
+              <div></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Peso Médio (g)</label><input type="number" step="0.1" id="env-peso-medio"></div>
+              <div class="form-group"><label>Perda de Peso (%)</label><input type="number" step="0.01" id="env-perda-peso-pct"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-bottom:16px">
+          <div class="table-card-header"><h3>📦 Produção e Leituras</h3></div>
+          <div class="modal-body">
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group"><label>Leitura Empacotadora (pacotes)</label><input type="number" id="env-leit-emp" min="0"></div>
+              <div class="form-group"><label>Leitura Enfardadeira (fardos)</label><input type="number" id="env-leit-enf" min="0"></div>
+            </div>
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group"><label>Total Fardos Produzidos *</label><input type="number" id="env-fardos" min="0" required></div>
+              <div class="form-group"><label>Total KG Produzidos</label><input type="number" step="0.01" id="env-kg"></div>
+            </div>
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group"><label>Velocidade Real (PPM)</label><input type="number" step="0.1" id="env-ppm"></div>
+              <div></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Perda Emb. Empacotadora (KG)</label><input type="number" step="0.001" id="env-perda-emp"></div>
+              <div class="form-group"><label>Perda Emb. Enfardadeira (KG)</label><input type="number" step="0.001" id="env-perda-enf"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-bottom:24px">
+          <div class="table-card-header"><h3>💬 Observações</h3></div>
+          <div class="modal-body">
+            <textarea id="env-obs" rows="3" placeholder="Observações gerais do turno..."></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:flex-end">
+          <button type="button" class="btn btn-outline" onclick="showPage('envase-list')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Salvar Relatório</button>
+        </div>
+        <input type="hidden" id="env-editing-id">
+      </form>
+    </div>
+
+    <!-- MANIP LIST -->
+    <div class="page" id="page-manip-list">
+      <div class="page-header">
+        <div><h1>Relatórios de Manipulação</h1><p>Histórico de turnos de manipulação</p></div>
+        <button class="btn btn-primary" onclick="showPage('manip-new')">➕ Novo Relatório</button>
+      </div>
+      <div class="filters-bar">
+        <label>Data início:</label><input type="date" id="flt-man-ini">
+        <label>Data fim:</label><input type="date" id="flt-man-fim">
+        <label>Turno:</label>
+        <select id="flt-man-turno"><option value="">Todos</option><option>A</option><option>B</option><option>C</option></select>
+        <button class="btn btn-primary btn-sm" onclick="loadManipList()">🔍 Filtrar</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Data</th><th>Turno</th><th>Produto</th><th>Operador</th><th>KG Produzido</th><th>Paradas (min)</th><th>Eficiência</th><th>Batidas</th><th>Ações</th></tr></thead>
+          <tbody id="manip-tbody"><tr><td colspan="9" class="loading">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MANIP NEW/EDIT -->
+    <div class="page" id="page-manip-new">
+      <div class="page-header">
+        <div><h1 id="manip-form-title">Novo Relatório de Manipulação</h1><p>Registro do turno de manipulação</p></div>
+        <button class="btn btn-outline" onclick="showPage('manip-list')">← Voltar</button>
+      </div>
+      <form id="manip-form" onsubmit="submitManip(event)">
+        <div class="table-card" style="margin-bottom:16px">
+          <div class="table-card-header"><h3>📋 Identificação</h3></div>
+          <div class="modal-body">
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group"><label>Data *</label><input type="date" id="man-data" required></div>
+              <div class="form-group"><label>Turno *</label>
+                <select id="man-turno" required><option value="">Selecione</option><option>A</option><option>B</option><option>C</option></select></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Produto *</label><input type="text" id="man-produto" required placeholder="Nome do produto manipulado"></div>
+              <div class="form-group"><label>Operador(es)</label><input type="text" id="man-operador" placeholder="Nome do(s) operador(es)"></div>
+            </div>
+            <div class="form-row" style="margin-top:16px">
+              <div class="form-group"><label>Tempo Disponível (min)</label><input type="number" id="man-tempo-disp" value="480" min="0"></div>
+              <div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-bottom:16px">
+          <div class="table-card-header"><h3>⏱️ Paradas do Turno</h3></div>
+          <div class="paradas-list" id="paradas-man-list"></div>
+          <div class="add-parada-btn" onclick="addParada('man')">➕ Adicionar Parada</div>
+        </div>
+
+        <div class="table-card" style="margin-bottom:16px">
+          <div class="table-card-header"><h3>🥣 Batidas — Misturador</h3><button type="button" class="btn btn-sm btn-outline" onclick="addBatida('misturador')">➕ Batida</button></div>
+          <div id="batidas-misturador-list" style="padding:12px"></div>
+          <div style="padding:10px 16px;background:#f8fafc;border-top:1px solid var(--border);font-size:13px">
+            Total Misturador: <strong id="total-misturador">0</strong> kg
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-bottom:16px">
+          <div class="table-card-header"><h3>🔄 Batidas — Duplo Cone</h3><button type="button" class="btn btn-sm btn-outline" onclick="addBatida('duplo_cone')">➕ Batida</button></div>
+          <div id="batidas-duplocone-list" style="padding:12px"></div>
+          <div style="padding:10px 16px;background:#f8fafc;border-top:1px solid var(--border);font-size:13px">
+            Total Duplo Cone: <strong id="total-duplocone">0</strong> kg
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-bottom:24px">
+          <div class="table-card-header"><h3>💬 Observações</h3></div>
+          <div class="modal-body">
+            <textarea id="man-obs" rows="3" placeholder="Observações gerais..."></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:flex-end">
+          <button type="button" class="btn btn-outline" onclick="showPage('manip-list')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Salvar Relatório</button>
+        </div>
+        <input type="hidden" id="man-editing-id">
+      </form>
+    </div>
+
+    <!-- BASE DE CAPACIDADE -->
+    <div class="page" id="page-capacidade">
+      <div class="page-header">
+        <div><h1>Base de Capacidade Produtiva</h1><p>Parâmetros técnicos por linha e SKU — editável</p></div>
+        <button class="btn btn-primary" onclick="openCapacidadeModal()">➕ Novo SKU</button>
+      </div>
+      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#854d0e">
+        ⚠️ Alterações aqui afetam o cálculo de produtividade de todos os relatórios futuros. Confirme as velocidades com a equipe técnica antes de salvar.
+      </div>
+      <div id="capacidade-content"><div class="loading">Carregando base de capacidade...</div></div>
+    </div>
+
+    <!-- USUARIOS -->
+    <div class="page" id="page-users">
+      <div class="page-header">
+        <div><h1>Usuários</h1><p>Gestão de acesso ao sistema</p></div>
+        <button class="btn btn-primary" onclick="openUserModal()">➕ Novo Usuário</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Setor</th><th>Cargo</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="7" class="loading">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MINHA CONTA -->
+    <div class="page" id="page-minha-conta">
+      <div class="page-header"><h1>Minha Conta</h1></div>
+      <div class="table-card" style="max-width:480px">
+        <div class="table-card-header"><h3>🔑 Alterar Senha</h3></div>
+        <div class="modal-body">
+          <div class="form-group"><label>Senha Atual</label><input type="password" id="cp-atual"></div>
+          <div class="form-group"><label>Nova Senha</label><input type="password" id="cp-nova"></div>
+          <div class="form-group"><label>Confirmar Nova Senha</label><input type="password" id="cp-confirma"></div>
+          <div class="error-msg" id="cp-error"></div>
+          <button class="btn btn-primary" style="margin-top:12px" onclick="changePassword()">Alterar Senha</button>
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn btn-outline" onclick="doLogout()">🚪 Sair do Sistema</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL CAPACIDADE -->
+<div class="modal-overlay" id="modal-capacidade">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="cap-modal-title">Novo SKU na Base de Capacidade</h2>
+      <button class="modal-close" onclick="closeModal('modal-capacidade')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group"><label>Linha *</label>
+          <select id="cap-linha" required><option value="">Selecione</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+        <div class="form-group"><label>SKU *</label><input type="text" id="cap-sku" required placeholder="ex: BONNY 0,8KG"></div>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group"><label>Gramatura (kg) *</label><input type="number" step="0.01" id="cap-gram" required></div>
+        <div class="form-group"><label>Velocidade PPM *</label><input type="number" step="0.1" id="cap-ppm" required></div>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group"><label>Pacotes/Fardo</label><input type="number" id="cap-pf"></div>
+        <div class="form-group"><label>Fardos/Palete</label><input type="number" id="cap-fp"></div>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group"><label>Carga Horária T1 (h)</label><input type="number" step="0.01" id="cap-ch1" value="8.46"></div>
+        <div class="form-group"><label>Carga Horária T2 (h)</label><input type="number" step="0.01" id="cap-ch2" value="8.71"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Validado</label>
+          <select id="cap-validado"><option value="true">Sim</option><option value="false">Não (em teste)</option></select></div>
+        <div class="form-group"><label>Observações</label><input type="text" id="cap-obs"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-capacidade')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCapacidade()">💾 Salvar</button>
+    </div>
+    <input type="hidden" id="cap-editing-id">
+  </div>
+</div>
+
+<!-- MODAL USER -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h2 id="user-modal-title">Novo Usuário</h2>
+      <button class="modal-close" onclick="closeModal('modal-user')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nome *</label><input type="text" id="u-nome" required></div>
+      <div class="form-group"><label>E-mail *</label><input type="email" id="u-email" required></div>
+      <div class="form-group" id="u-senha-group"><label>Senha *</label><input type="password" id="u-senha"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Perfil</label>
+          <select id="u-role"><option value="tecnico">Técnico</option><option value="gestor">Gestor</option><option value="admin">Admin</option></select></div>
+        <div class="form-group"><label>Setor</label>
+          <select id="u-setor"><option value="ambos">Ambos</option><option value="envase">Envase</option><option value="manipulacao">Manipulação</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Cargo</label><input type="text" id="u-cargo"></div>
+        <div class="form-group"><label>Matrícula</label><input type="text" id="u-matricula"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-user')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser()">💾 Salvar</button>
+    </div>
+    <input type="hidden" id="u-editing-id">
+  </div>
+</div>
+
+<script>
+const API = '';
+let token = localStorage.getItem('prod_token') || '';
+let currentUser = JSON.parse(localStorage.getItem('prod_user') || 'null');
+let capCache = [];
+let charts = {};
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  if (r.status === 401) { doLogout(); return null; }
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.detail || 'Erro ' + r.status);
+  }
+  return r.json();
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pass  = document.getElementById('login-password').value;
+  const err   = document.getElementById('login-error');
+  err.style.display = 'none';
+  try {
+    const fd = new FormData();
+    fd.append('username', email);
+    fd.append('password', pass);
+    const r = await fetch(API + '/api/auth/token', { method: 'POST', body: fd });
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    token = data.access_token;
+    currentUser = data.user;
+    localStorage.setItem('prod_token', token);
+    localStorage.setItem('prod_user', JSON.stringify(currentUser));
+    initApp();
+  } catch {
+    err.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('prod_token');
+  localStorage.removeItem('prod_user');
+  location.reload();
+}
+
+async function changePassword() {
+  const atual = document.getElementById('cp-atual').value;
+  const nova  = document.getElementById('cp-nova').value;
+  const conf  = document.getElementById('cp-confirma').value;
+  const err   = document.getElementById('cp-error');
+  err.style.display = 'none';
+  if (nova !== conf) { err.textContent = 'As senhas não coincidem.'; err.style.display = 'block'; return; }
+  try {
+    await api('POST', '/api/auth/change-password', { current_password: atual, new_password: nova });
+    alert('Senha alterada com sucesso!');
+  } catch(e) { err.textContent = e.message; err.style.display = 'block'; }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function initApp() {
+  if (!token || !currentUser) return;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-avatar').textContent = currentUser.nome[0].toUpperCase();
+  document.getElementById('user-name').textContent = currentUser.nome;
+  document.getElementById('user-role').textContent = { admin: 'Administrador', gestor: 'Gestor', tecnico: 'Técnico' }[currentUser.role] || currentUser.role;
+
+  const isAdmin = currentUser.role === 'admin';
+  const isGestor = ['admin','gestor'].includes(currentUser.role);
+  document.getElementById('admin-section').style.display = isGestor ? '' : 'none';
+  document.getElementById('nav-capacidade').style.display = isGestor ? '' : 'none';
+  document.getElementById('nav-users').style.display = isAdmin ? '' : 'none';
+
+  // Defaults para datas de filtros
+  const hoje = new Date().toISOString().split('T')[0];
+  const dIni = new Date(Date.now() - 7*86400000).toISOString().split('T')[0];
+  ['flt-env-ini','flt-man-ini'].forEach(id => document.getElementById(id).value = dIni);
+  ['flt-env-fim','flt-man-fim'].forEach(id => document.getElementById(id).value = hoje);
+
+  // Data padrão nos formulários
+  document.getElementById('env-data').value = hoje;
+  document.getElementById('man-data').value = hoje;
+
+  loadDashboard();
+  preloadCapacidade();
+}
+
+window.onload = () => {
+  if (token && currentUser) initApp();
+};
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+
+  const pageLoaders = {
+    'dashboard': loadDashboard,
+    'envase-list': loadEnvaseList,
+    'manip-list': loadManipList,
+    'capacidade': loadCapacidade,
+    'users': loadUsers,
+    'envase-new': () => resetEnvaseForm(),
+    'manip-new': () => resetManipForm(),
+  };
+  if (pageLoaders[name]) pageLoaders[name]();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+let periodoAtual = 'hoje';
+
+function setPeriodo(p) {
+  periodoAtual = p;
+  document.querySelectorAll('.periodo-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  loadDashboard();
+}
+
+async function loadDashboard() {
+  try {
+    const [stats, evolucao] = await Promise.all([
+      api('GET', '/api/dashboard/stats?periodo=' + periodoAtual),
+      api('GET', '/api/dashboard/evolucao?dias=30')
+    ]);
+    if (!stats) return;
+
+    const e = stats.envase;
+    const m = stats.manipulacao;
+
+    document.getElementById('kpi-fardos').textContent = (e.total_fardos || 0).toLocaleString('pt-BR');
+    document.getElementById('kpi-kg-env').textContent = formatNum(e.total_kg || 0) + ' kg';
+    document.getElementById('kpi-oee').textContent = e.oee_medio != null ? e.oee_medio + '%' : '—';
+    document.getElementById('kpi-prod').textContent = e.produtividade_media_pct != null ? e.produtividade_media_pct + '%' : '—';
+    document.getElementById('kpi-kg-man').textContent = formatNum(m.total_kg || 0) + ' kg';
+    document.getElementById('kpi-efic').textContent = m.eficiencia_media != null ? m.eficiencia_media + '%' : '—';
+    document.getElementById('kpi-rels-env').textContent = e.total_relatorios || 0;
+    document.getElementById('kpi-rels-man').textContent = m.total_relatorios || 0;
+
+    buildCharts(evolucao, e, m);
+  } catch(err) { console.error(err); }
+}
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function buildCharts(ev, e, m) {
+  // Fardos diários
+  destroyChart('fardos');
+  if (ev && ev.envase && ev.envase.length) {
+    charts['fardos'] = new Chart(document.getElementById('chart-fardos'), {
+      type: 'bar',
+      data: {
+        labels: ev.envase.map(r => fmtDate(r.data)),
+        datasets: [{label:'Fardos', data: ev.envase.map(r => r.fardos), backgroundColor:'rgba(26,86,160,.7)', borderRadius:4}]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+  }
+
+  // Paradas envase
+  destroyChart('paradas-env');
+  if (e.paradas_por_categoria && e.paradas_por_categoria.length) {
+    const cores = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
+    charts['paradas-env'] = new Chart(document.getElementById('chart-paradas-env'), {
+      type: 'doughnut',
+      data: {
+        labels: e.paradas_por_categoria.map(p => (p.categoria || 'Outros') + ' (' + p.total_min + 'min)'),
+        datasets: [{ data: e.paradas_por_categoria.map(p => p.total_min), backgroundColor: cores }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{font:{size:10}, boxWidth:12}}} }
+    });
+  }
+
+  // OEE por linha
+  destroyChart('oee-linha');
+  if (e.oee_por_linha && Object.keys(e.oee_por_linha).length) {
+    const oeeData = Object.entries(e.oee_por_linha);
+    charts['oee-linha'] = new Chart(document.getElementById('chart-oee-linha'), {
+      type: 'bar',
+      data: {
+        labels: oeeData.map(d => d[0]),
+        datasets: [{label:'OEE %', data: oeeData.map(d => d[1]),
+          backgroundColor: oeeData.map(d => d[1] >= 85 ? '#22c55e' : d[1] >= 65 ? '#f97316' : '#ef4444'), borderRadius:6}]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{min:0,max:100, ticks:{callback:v=>v+'%'}}} }
+    });
+  }
+
+  // KG manipulação
+  destroyChart('kg-man');
+  if (ev && ev.manipulacao && ev.manipulacao.length) {
+    charts['kg-man'] = new Chart(document.getElementById('chart-kg-man'), {
+      type: 'line',
+      data: {
+        labels: ev.manipulacao.map(r => fmtDate(r.data)),
+        datasets: [{label:'KG', data: ev.manipulacao.map(r => r.kg), borderColor:'#16a34a', backgroundColor:'rgba(22,163,74,.1)', fill:true, tension:.4, pointRadius:3}]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+  }
+
+  // Produção por linha
+  destroyChart('prod-linha');
+  if (e.producao_por_linha && Object.keys(e.producao_por_linha).length) {
+    const pData = Object.entries(e.producao_por_linha);
+    charts['prod-linha'] = new Chart(document.getElementById('chart-prod-linha'), {
+      type: 'pie',
+      data: {
+        labels: pData.map(d => d[0]),
+        datasets: [{ data: pData.map(d => d[1]), backgroundColor: ['#1a56a0','#16a34a','#f97316','#8b5cf6'] }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{font:{size:11}}}} }
+    });
+  }
+
+  // Paradas manipulação
+  destroyChart('paradas-man');
+  if (m.paradas_por_categoria && m.paradas_por_categoria.length) {
+    const cores = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6'];
+    charts['paradas-man'] = new Chart(document.getElementById('chart-paradas-man'), {
+      type: 'doughnut',
+      data: {
+        labels: m.paradas_por_categoria.map(p => (p.categoria || 'Outros') + ' (' + p.total_min + 'min)'),
+        datasets: [{ data: m.paradas_por_categoria.map(p => p.total_min), backgroundColor: cores }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{font:{size:10}, boxWidth:12}}} }
+    });
+  }
+}
+
+// ── CAPACIDADE ────────────────────────────────────────────────────────────────
+async function preloadCapacidade() {
+  try { capCache = await api('GET', '/api/capacidade/'); } catch{}
+}
+
+async function loadCapacidade() {
+  try {
+    capCache = await api('GET', '/api/capacidade/');
+    const cont = document.getElementById('capacidade-content');
+    if (!capCache || !capCache.length) { cont.innerHTML = '<div class="empty"><h3>Nenhum dado</h3></div>'; return; }
+
+    const byLinha = {};
+    capCache.forEach(c => {
+      if (!byLinha[c.linha]) byLinha[c.linha] = [];
+      byLinha[c.linha].push(c);
+    });
+
+    let html = '';
+    Object.keys(byLinha).sort().forEach(linha => {
+      const items = byLinha[linha];
+      const isVal = items.some(i => i.validado);
+      html += `<div class="table-card" style="margin-bottom:16px">
+        <div class="linha-header">
+          <span>LINHA ${linha}</span>
+          ${!isVal ? '<span class="tag-nv">⚠️ NÃO VALIDADO</span>' : ''}
+        </div>
+        <table>
+          <thead><tr><th>SKU</th><th>Gram.</th><th>Pct/Fardo</th><th>PPM</th><th>Fardos/h</th><th>Fardos/Turno</th><th>KG/Turno</th><th>Fardos/Dia</th><th>KG/Dia</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody>`;
+      items.forEach(c => {
+        html += `<tr class="${c.validado ? '' : 'cap-not-validated'}">
+          <td><strong>${c.sku}</strong></td>
+          <td>${c.gramatura_kg} kg</td>
+          <td>${c.pacote_por_fardo || '—'}</td>
+          <td>${c.velocidade_ppm}</td>
+          <td>${c.cap_fardo_hora || '—'}</td>
+          <td>${c.cap_fardo_turno || '—'}</td>
+          <td>${c.cap_kg_turno ? formatNum(c.cap_kg_turno) : '—'}</td>
+          <td>${c.cap_fardo_dia || '—'}</td>
+          <td>${c.cap_kg_dia ? formatNum(c.cap_kg_dia) : '—'}</td>
+          <td>${c.validado ? '<span class="badge badge-green">Validado</span>' : '<span class="badge badge-yellow">Em teste</span>'}</td>
+          <td><button class="btn btn-sm btn-outline" onclick="editCapacidade(${c.id})">✏️</button>
+              <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteCapacidade(${c.id})">🗑️</button></td>
+        </tr>`;
+      });
+      html += '</tbody></table></div>';
+    });
+    cont.innerHTML = html;
+  } catch(e) { console.error(e); }
+}
+
+function openCapacidadeModal(id) {
+  document.getElementById('cap-editing-id').value = '';
+  document.getElementById('cap-modal-title').textContent = 'Novo SKU na Base de Capacidade';
+  ['cap-linha','cap-sku','cap-gram','cap-ppm','cap-pf','cap-fp','cap-obs'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('cap-ch1').value = '8.46';
+  document.getElementById('cap-ch2').value = '8.71';
+  document.getElementById('cap-validado').value = 'true';
+  openModal('modal-capacidade');
+}
+
+function editCapacidade(id) {
+  const c = capCache.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('cap-editing-id').value = id;
+  document.getElementById('cap-modal-title').textContent = 'Editar: ' + c.sku;
+  document.getElementById('cap-linha').value = c.linha;
+  document.getElementById('cap-sku').value = c.sku;
+  document.getElementById('cap-gram').value = c.gramatura_kg;
+  document.getElementById('cap-ppm').value = c.velocidade_ppm;
+  document.getElementById('cap-pf').value = c.pacote_por_fardo || '';
+  document.getElementById('cap-fp').value = c.fardo_por_palete || '';
+  document.getElementById('cap-ch1').value = c.carga_horaria_turno1 || 8.46;
+  document.getElementById('cap-ch2').value = c.carga_horaria_turno2 || 8.71;
+  document.getElementById('cap-validado').value = c.validado ? 'true' : 'false';
+  document.getElementById('cap-obs').value = c.observacoes || '';
+  openModal('modal-capacidade');
+}
+
+async function saveCapacidade() {
+  const id = document.getElementById('cap-editing-id').value;
+  const payload = {
+    linha: parseInt(document.getElementById('cap-linha').value),
+    sku: document.getElementById('cap-sku').value,
+    gramatura_kg: parseFloat(document.getElementById('cap-gram').value),
+    velocidade_ppm: parseFloat(document.getElementById('cap-ppm').value),
+    pacote_por_fardo: parseInt(document.getElementById('cap-pf').value) || null,
+    fardo_por_palete: parseInt(document.getElementById('cap-fp').value) || null,
+    carga_horaria_turno1: parseFloat(document.getElementById('cap-ch1').value),
+    carga_horaria_turno2: parseFloat(document.getElementById('cap-ch2').value),
+    validado: document.getElementById('cap-validado').value === 'true',
+    observacoes: document.getElementById('cap-obs').value || null
+  };
+  try {
+    if (id) { await api('PUT', '/api/capacidade/' + id, payload); }
+    else { await api('POST', '/api/capacidade/', payload); }
+    closeModal('modal-capacidade');
+    await preloadCapacidade();
+    loadCapacidade();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function deleteCapacidade(id) {
+  if (!confirm('Remover este SKU da base de capacidade?')) return;
+  await api('DELETE', '/api/capacidade/' + id);
+  await preloadCapacidade();
+  loadCapacidade();
+}
+
+// ── ENVASE ────────────────────────────────────────────────────────────────────
+async function loadEnvaseList() {
+  const ini   = document.getElementById('flt-env-ini').value;
+  const fim   = document.getElementById('flt-env-fim').value;
+  const linha = document.getElementById('flt-env-linha').value;
+  const turno = document.getElementById('flt-env-turno').value;
+  let url = '/api/envase/?';
+  if (ini) url += 'data_inicio=' + ini + '&';
+  if (fim) url += 'data_fim=' + fim + '&';
+  if (linha) url += 'linha=' + linha + '&';
+  if (turno) url += 'turno=' + turno + '&';
+  try {
+    const rows = await api('GET', url);
+    const tb = document.getElementById('envase-tbody');
+    if (!rows || !rows.length) { tb.innerHTML = '<tr><td colspan="11" class="empty"><h3>Nenhum registro encontrado</h3></td></tr>'; return; }
+    tb.innerHTML = rows.map(r => {
+      const prod = r.produtividade_fardos_pct;
+      const oee  = r.oee;
+      return `<tr>
+        <td>${fmtDate(r.data)}</td>
+        <td><span class="badge badge-blue">Turno ${r.turno}</span></td>
+        <td>Linha ${r.linha}</td>
+        <td><strong>${r.sku || r.produto}</strong><br><small style="color:var(--text-muted)">${r.gramatura_kg ? r.gramatura_kg+'kg' : ''} ${r.marca || ''}</small></td>
+        <td>${r.operador_nome || '—'}</td>
+        <td><strong>${r.total_fardos_produzidos ?? '—'}</strong></td>
+        <td>${r.total_kg_produzidos != null ? formatNum(r.total_kg_produzidos) : '—'}</td>
+        <td>${prod != null ? badge(prod, 85, 70) + prod + '%' : '—'}</td>
+        <td>${oee != null ? badge(oee, 85, 65) + oee + '%' : '—'}</td>
+        <td>${r.total_minutos_parada != null ? r.total_minutos_parada + ' min' : '—'}</td>
+        <td>
+          <button class="btn btn-sm btn-outline" onclick="editEnvase(${r.id})">✏️</button>
+          <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteEnvase(${r.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+function badge(val, good, warn) {
+  if (val >= good) return '<span class="badge badge-green" style="margin-right:4px">';
+  if (val >= warn) return '<span class="badge badge-orange" style="margin-right:4px">';
+  return '<span class="badge badge-red" style="margin-right:4px">';
+}
+
+// SKUs por linha baseado no cache de capacidade
+async function onLinhaChange() {
+  const linha = parseInt(document.getElementById('env-linha').value);
+  const skuSel = document.getElementById('env-sku');
+  if (!linha) { skuSel.innerHTML = '<option value="">— selecione a linha —</option>'; return; }
+  const skus = capCache.filter(c => c.linha === linha);
+  skuSel.innerHTML = '<option value="">Selecione o SKU</option>' +
+    skus.map(s => `<option value="${s.sku}" data-id="${s.id}">${s.sku}</option>`).join('');
+  document.getElementById('cap-teorica-display').style.display = 'none';
+}
+
+function onSkuChange() {
+  const linha = parseInt(document.getElementById('env-linha').value);
+  const sku   = document.getElementById('env-sku').value;
+  const cap   = capCache.find(c => c.linha === linha && c.sku === sku);
+  const disp  = document.getElementById('cap-teorica-display');
+  if (!cap) { disp.style.display = 'none'; return; }
+  disp.style.display = 'block';
+  document.getElementById('env-ppm').value = cap.velocidade_ppm || '';
+  // Preenche campo gramatura e pacotes automaticamente
+  document.getElementById('cap-teorica-values').innerHTML = `
+    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">PPM</div><div style="font-size:18px;font-weight:700;color:var(--primary)">${cap.velocidade_ppm}</div></div>
+    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">Fardos/Turno</div><div style="font-size:18px;font-weight:700;color:var(--success)">${cap.cap_fardo_turno || '—'}</div></div>
+    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">KG/Turno</div><div style="font-size:18px;font-weight:700;color:var(--secondary)">${cap.cap_kg_turno ? formatNum(cap.cap_kg_turno) : '—'}</div></div>
+    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">Pct/Fardo</div><div style="font-size:18px;font-weight:700;color:var(--text)">${cap.pacote_por_fardo || '—'}</div></div>
+  `;
+  if (!cap.validado) disp.style.background = '#fef9c3';
+  else disp.style.background = '#f0f9ff';
+}
+
+let paradasEnv = [];
+let paradasMan = [];
+
+function addParada(tipo) {
+  const idx = tipo === 'env' ? paradasEnv.length : paradasMan.length;
+  const item = { hora_inicio:'', hora_fim:'', tempo_minutos:'', categoria:'', ocorrencia:'', acao:'' };
+  if (tipo === 'env') paradasEnv.push(item);
+  else paradasMan.push(item);
+  renderParadas(tipo);
+}
+
+function removeParada(tipo, idx) {
+  if (tipo === 'env') paradasEnv.splice(idx, 1);
+  else paradasMan.splice(idx, 1);
+  renderParadas(tipo);
+}
+
+const CATS = ['mecanica','eletrica','setup','qualidade','falta_material','operacional','higienizacao','outros'];
+const CATS_LABEL = {'mecanica':'Mecânica','eletrica':'Elétrica','setup':'Setup/Troca','qualidade':'Qualidade',
+  'falta_material':'Falta Material','operacional':'Operacional','higienizacao':'Higienização','outros':'Outros'};
+
+function renderParadas(tipo) {
+  const list = tipo === 'env' ? paradasEnv : paradasMan;
+  const cont = document.getElementById('paradas-' + tipo + '-list');
+  if (!list.length) { cont.innerHTML = '<div style="padding:12px 16px;color:var(--text-muted);font-size:13px">Nenhuma parada registrada</div>'; return; }
+  cont.innerHTML = list.map((p, i) => `
+    <div style="padding:14px;border-bottom:1px solid var(--border);background:${i%2===0?'#fafafa':'#fff'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:12px;font-weight:700;color:var(--text-muted)">PARADA ${i+1}</span>
+        <button type="button" class="btn btn-sm btn-danger" onclick="removeParada('${tipo}',${i})">✕ Remover</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="form-group"><label>Início</label><input type="time" value="${p.hora_inicio}" onchange="paradasEnv[${i}]||paradasMan; updateParada('${tipo}',${i},'hora_inicio',this.value)"></div>
+        <div class="form-group"><label>Fim</label><input type="time" value="${p.hora_fim}" onchange="updateParada('${tipo}',${i},'hora_fim',this.value)"></div>
+        <div class="form-group"><label>Minutos</label><input type="number" value="${p.tempo_minutos}" onchange="updateParada('${tipo}',${i},'tempo_minutos',this.value)" min="0" step="0.5"></div>
+        <div class="form-group"><label>Categoria</label>
+          <select onchange="updateParada('${tipo}',${i},'categoria',this.value)">
+            <option value="">Selecione</option>
+            ${CATS.map(c=>`<option value="${c}" ${p.categoria===c?'selected':''}>${CATS_LABEL[c]}</option>`).join('')}
+          </select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label>Ocorrência *</label><textarea rows="2" onchange="updateParada('${tipo}',${i},'ocorrencia',this.value)" placeholder="Descreva a ocorrência...">${p.ocorrencia}</textarea></div>
+        <div class="form-group"><label>Ação tomada</label><textarea rows="2" onchange="updateParada('${tipo}',${i},'acao',this.value)" placeholder="O que foi feito...">${p.acao}</textarea></div>
+      </div>
+    </div>`).join('');
+}
+
+function updateParada(tipo, idx, field, val) {
+  const list = tipo === 'env' ? paradasEnv : paradasMan;
+  if (list[idx]) list[idx][field] = val;
+}
+
+function resetEnvaseForm() {
+  document.getElementById('envase-form-title').textContent = 'Novo Relatório de Envase';
+  document.getElementById('env-editing-id').value = '';
+  document.getElementById('env-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('env-turno').value = '';
+  document.getElementById('env-linha').value = '';
+  document.getElementById('env-sku').innerHTML = '<option value="">— selecione a linha —</option>';
+  ['env-operador','env-tempo-disp','env-leit-emp','env-leit-enf',
+   'env-pa-un','env-pa-kg','env-pb-un','env-pb-kg','env-pbx-un','env-pbx-kg',
+   'env-peso-medio','env-perda-peso-pct','env-perda-emp','env-perda-enf',
+   'env-fardos','env-kg','env-ppm','env-obs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = id === 'env-tempo-disp' ? '480' : '';
+  });
+  document.getElementById('cap-teorica-display').style.display = 'none';
+  paradasEnv = [];
+  renderParadas('env');
+}
+
+async function submitEnvase(e) {
+  e.preventDefault();
+  const id = document.getElementById('env-editing-id').value;
+  const linha = parseInt(document.getElementById('env-linha').value);
+  const sku   = document.getElementById('env-sku').value;
+  const cap   = capCache.find(c => c.linha === linha && c.sku === sku);
+
+  const payload = {
+    data: document.getElementById('env-data').value,
+    turno: document.getElementById('env-turno').value,
+    linha,
+    sku,
+    produto: sku || document.getElementById('env-sku').options[document.getElementById('env-sku').selectedIndex]?.text || '',
+    gramatura_kg: cap ? cap.gramatura_kg : null,
+    pacote_por_fardo: cap ? cap.pacote_por_fardo : null,
+    operador_nome: document.getElementById('env-operador').value || null,
+    tempo_disponivel_min: parseFloat(document.getElementById('env-tempo-disp').value) || 480,
+    leitura_empacotadora_pacotes: parseInt(document.getElementById('env-leit-emp').value) || null,
+    leitura_enfardadeira_fardos: parseInt(document.getElementById('env-leit-enf').value) || null,
+    peso_alto_unidades: parseInt(document.getElementById('env-pa-un').value) || null,
+    peso_alto_kg: parseFloat(document.getElementById('env-pa-kg').value) || null,
+    peso_bom_unidades: parseInt(document.getElementById('env-pb-un').value) || null,
+    peso_bom_kg: parseFloat(document.getElementById('env-pb-kg').value) || null,
+    peso_baixo_unidades: parseInt(document.getElementById('env-pbx-un').value) || null,
+    peso_baixo_kg: parseFloat(document.getElementById('env-pbx-kg').value) || null,
+    peso_medio: parseFloat(document.getElementById('env-peso-medio').value) || null,
+    perda_peso_percentual: parseFloat(document.getElementById('env-perda-peso-pct').value) || null,
+    perda_emb_empacotadora_kg: parseFloat(document.getElementById('env-perda-emp').value) || null,
+    perda_emb_enfardadeira_kg: parseFloat(document.getElementById('env-perda-enf').value) || null,
+    total_fardos_produzidos: parseInt(document.getElementById('env-fardos').value) || null,
+    total_kg_produzidos: parseFloat(document.getElementById('env-kg').value) || null,
+    velocidade_real_ppm: parseFloat(document.getElementById('env-ppm').value) || null,
+    observacoes: document.getElementById('env-obs').value || null,
+    paradas: paradasEnv.filter(p => p.ocorrencia).map(p => ({
+      hora_inicio: p.hora_inicio || '00:00',
+      hora_fim: p.hora_fim || null,
+      tempo_minutos: parseFloat(p.tempo_minutos) || null,
+      categoria: p.categoria || null,
+      ocorrencia: p.ocorrencia,
+      acao: p.acao || null
+    }))
+  };
+
+  try {
+    if (id) { await api('PUT', '/api/envase/' + id, payload); }
+    else { await api('POST', '/api/envase/', payload); }
+    showPage('envase-list');
+  } catch(err) { alert('Erro ao salvar: ' + err.message); }
+}
+
+async function editEnvase(id) {
+  try {
+    const r = await api('GET', '/api/envase/' + id);
+    showPage('envase-new');
+    document.getElementById('envase-form-title').textContent = 'Editar Relatório de Envase';
+    document.getElementById('env-editing-id').value = id;
+    document.getElementById('env-data').value = r.data;
+    document.getElementById('env-turno').value = r.turno;
+    document.getElementById('env-linha').value = r.linha;
+    await onLinhaChange();
+    document.getElementById('env-sku').value = r.sku || '';
+    onSkuChange();
+    document.getElementById('env-operador').value = r.operador_nome || '';
+    document.getElementById('env-tempo-disp').value = r.tempo_disponivel_min || 480;
+    document.getElementById('env-leit-emp').value = r.leitura_empacotadora_pacotes || '';
+    document.getElementById('env-leit-enf').value = r.leitura_enfardadeira_fardos || '';
+    document.getElementById('env-pa-un').value = r.peso_alto_unidades || '';
+    document.getElementById('env-pa-kg').value = r.peso_alto_kg || '';
+    document.getElementById('env-pb-un').value = r.peso_bom_unidades || '';
+    document.getElementById('env-pb-kg').value = r.peso_bom_kg || '';
+    document.getElementById('env-pbx-un').value = r.peso_baixo_unidades || '';
+    document.getElementById('env-pbx-kg').value = r.peso_baixo_kg || '';
+    document.getElementById('env-peso-medio').value = r.peso_medio || '';
+    document.getElementById('env-perda-peso-pct').value = r.perda_peso_percentual || '';
+    document.getElementById('env-perda-emp').value = r.perda_emb_empacotadora_kg || '';
+    document.getElementById('env-perda-enf').value = r.perda_emb_enfardadeira_kg || '';
+    document.getElementById('env-fardos').value = r.total_fardos_produzidos || '';
+    document.getElementById('env-kg').value = r.total_kg_produzidos || '';
+    document.getElementById('env-ppm').value = r.velocidade_real_ppm || '';
+    document.getElementById('env-obs').value = r.observacoes || '';
+    paradasEnv = (r.paradas || []).map(p => ({...p}));
+    renderParadas('env');
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function deleteEnvase(id) {
+  if (!confirm('Excluir este relatório?')) return;
+  await api('DELETE', '/api/envase/' + id);
+  loadEnvaseList();
+}
+
+// ── MANIPULAÇÃO ───────────────────────────────────────────────────────────────
+let batidasMist = [];
+let batidasDC   = [];
+
+function addBatida(equip) {
+  const list = equip === 'misturador' ? batidasMist : batidasDC;
+  list.push({ numero_batida: list.length + 1, kg_por_batida: '', produto: '', observacao: '' });
+  renderBatidas();
+}
+
+function removeBatida(equip, idx) {
+  if (equip === 'misturador') batidasMist.splice(idx, 1);
+  else batidasDC.splice(idx, 1);
+  renderBatidas();
+}
+
+function renderBatidas() {
+  const render = (list, equip, contId, totalId) => {
+    const cont = document.getElementById(contId);
+    if (!list.length) { cont.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Nenhuma batida registrada</div>'; document.getElementById(totalId).textContent = '0'; return; }
+    cont.innerHTML = list.map((b, i) => `
+      <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:10px">
+        <div class="form-group" style="margin:0"><label>Nº</label><input type="number" value="${b.numero_batida}" style="width:60px" onchange="updateBatida('${equip}',${i},'numero_batida',this.value)"></div>
+        <div class="form-group" style="margin:0"><label>KG por Batida</label><input type="number" step="0.01" value="${b.kg_por_batida}" onchange="updateBatida('${equip}',${i},'kg_por_batida',this.value); calcTotals()"></div>
+        <div class="form-group" style="margin:0"><label>Produto</label><input type="text" value="${b.produto||''}" onchange="updateBatida('${equip}',${i},'produto',this.value)" placeholder="opcional"></div>
+        <div class="form-group" style="margin:0"><label>Obs</label><input type="text" value="${b.observacao||''}" onchange="updateBatida('${equip}',${i},'observacao',this.value)"></div>
+        <button type="button" class="btn btn-sm btn-danger" style="margin-bottom:0" onclick="removeBatida('${equip}',${i}); calcTotals()">✕</button>
+      </div>`).join('');
+    const total = list.reduce((s, b) => s + (parseFloat(b.kg_por_batida) || 0) * (parseInt(b.numero_batida) || 1), 0);
+    document.getElementById(totalId).textContent = formatNum(total);
+  };
+  render(batidasMist, 'misturador', 'batidas-misturador-list', 'total-misturador');
+  render(batidasDC,   'duplo_cone', 'batidas-duplocone-list',  'total-duplocone');
+}
+
+function calcTotals() { renderBatidas(); }
+
+function updateBatida(equip, idx, field, val) {
+  const list = equip === 'misturador' ? batidasMist : batidasDC;
+  if (list[idx]) list[idx][field] = val;
+}
+
+function resetManipForm() {
+  document.getElementById('manip-form-title').textContent = 'Novo Relatório de Manipulação';
+  document.getElementById('man-editing-id').value = '';
+  document.getElementById('man-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('man-turno').value = '';
+  document.getElementById('man-produto').value = '';
+  document.getElementById('man-operador').value = '';
+  document.getElementById('man-tempo-disp').value = '480';
+  document.getElementById('man-obs').value = '';
+  paradasMan = [];
+  batidasMist = [];
+  batidasDC   = [];
+  renderParadas('man');
+  renderBatidas();
+}
+
+async function loadManipList() {
+  const ini   = document.getElementById('flt-man-ini').value;
+  const fim   = document.getElementById('flt-man-fim').value;
+  const turno = document.getElementById('flt-man-turno').value;
+  let url = '/api/manipulacao/?';
+  if (ini) url += 'data_inicio=' + ini + '&';
+  if (fim) url += 'data_fim=' + fim + '&';
+  if (turno) url += 'turno=' + turno + '&';
+  try {
+    const rows = await api('GET', url);
+    const tb = document.getElementById('manip-tbody');
+    if (!rows || !rows.length) { tb.innerHTML = '<tr><td colspan="9" class="empty"><h3>Nenhum registro encontrado</h3></td></tr>'; return; }
+    tb.innerHTML = rows.map(r => {
+      const efic = r.eficiencia_percentual;
+      const batidas = (r.batidas || []);
+      const totalBatidas = batidas.length;
+      return `<tr>
+        <td>${fmtDate(r.data)}</td>
+        <td><span class="badge badge-blue">Turno ${r.turno}</span></td>
+        <td><strong>${r.produto}</strong></td>
+        <td>${r.operador_nome || '—'}</td>
+        <td><strong>${r.total_kg_produzidos != null ? formatNum(r.total_kg_produzidos) : '—'}</strong> kg</td>
+        <td>${r.total_minutos_parada != null ? r.total_minutos_parada + ' min' : '—'}</td>
+        <td>${efic != null ? badge(efic, 85, 70) + efic + '%</span>' : '—'}</td>
+        <td>${totalBatidas} batidas</td>
+        <td>
+          <button class="btn btn-sm btn-outline" onclick="editManip(${r.id})">✏️</button>
+          <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteManip(${r.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function submitManip(e) {
+  e.preventDefault();
+  const id = document.getElementById('man-editing-id').value;
+  const todasBatidas = [
+    ...batidasMist.filter(b => b.kg_por_batida).map(b => ({ equipamento:'misturador', numero_batida: parseInt(b.numero_batida)||1, kg_por_batida: parseFloat(b.kg_por_batida), produto: b.produto||null, observacao: b.observacao||null })),
+    ...batidasDC.filter(b => b.kg_por_batida).map(b => ({ equipamento:'duplo_cone', numero_batida: parseInt(b.numero_batida)||1, kg_por_batida: parseFloat(b.kg_por_batida), produto: b.produto||null, observacao: b.observacao||null }))
+  ];
+  const payload = {
+    data: document.getElementById('man-data').value,
+    turno: document.getElementById('man-turno').value,
+    produto: document.getElementById('man-produto').value,
+    operador_nome: document.getElementById('man-operador').value || null,
+    tempo_disponivel_min: parseFloat(document.getElementById('man-tempo-disp').value) || 480,
+    observacoes: document.getElementById('man-obs').value || null,
+    paradas: paradasMan.filter(p => p.ocorrencia).map(p => ({
+      hora_inicio: p.hora_inicio || '00:00',
+      hora_fim: p.hora_fim || null,
+      tempo_minutos: parseFloat(p.tempo_minutos) || null,
+      categoria: p.categoria || null,
+      ocorrencia: p.ocorrencia,
+      acao: p.acao || null
+    })),
+    batidas: todasBatidas
+  };
+  try {
+    if (id) { await api('PUT', '/api/manipulacao/' + id, payload); }
+    else { await api('POST', '/api/manipulacao/', payload); }
+    showPage('manip-list');
+  } catch(err) { alert('Erro: ' + err.message); }
+}
+
+async function editManip(id) {
+  try {
+    const r = await api('GET', '/api/manipulacao/' + id);
+    showPage('manip-new');
+    document.getElementById('manip-form-title').textContent = 'Editar Relatório de Manipulação';
+    document.getElementById('man-editing-id').value = id;
+    document.getElementById('man-data').value = r.data;
+    document.getElementById('man-turno').value = r.turno;
+    document.getElementById('man-produto').value = r.produto;
+    document.getElementById('man-operador').value = r.operador_nome || '';
+    document.getElementById('man-tempo-disp').value = r.tempo_disponivel_min || 480;
+    document.getElementById('man-obs').value = r.observacoes || '';
+    paradasMan = (r.paradas || []).map(p => ({...p}));
+    batidasMist = (r.batidas || []).filter(b => b.equipamento === 'misturador').map(b => ({...b}));
+    batidasDC   = (r.batidas || []).filter(b => b.equipamento === 'duplo_cone').map(b => ({...b}));
+    renderParadas('man');
+    renderBatidas();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function deleteManip(id) {
+  if (!confirm('Excluir este relatório?')) return;
+  await api('DELETE', '/api/manipulacao/' + id);
+  loadManipList();
+}
+
+// ── USUARIOS ──────────────────────────────────────────────────────────────────
+async function loadUsers() {
+  const rows = await api('GET', '/api/users/');
+  const tb = document.getElementById('users-tbody');
+  if (!rows || !rows.length) { tb.innerHTML = '<tr><td colspan="7" class="empty">Nenhum usuário</td></tr>'; return; }
+  tb.innerHTML = rows.map(u => `<tr>
+    <td><strong>${u.nome}</strong></td>
+    <td>${u.email}</td>
+    <td><span class="badge ${u.role==='admin'?'badge-red':u.role==='gestor'?'badge-blue':'badge-gray'}">${u.role}</span></td>
+    <td>${u.setor || '—'}</td>
+    <td>${u.cargo || '—'}</td>
+    <td>${u.is_active ? '<span class="badge badge-green">Ativo</span>' : '<span class="badge badge-gray">Inativo</span>'}</td>
+    <td>
+      <button class="btn btn-sm btn-outline" onclick="editUser(${u.id},'${u.nome}','${u.email}','${u.role}','${u.setor||''}','${u.cargo||''}','${u.matricula||''}')">✏️</button>
+      ${u.is_active ? `<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="toggleUser(${u.id},false)">Desativar</button>` : `<button class="btn btn-sm btn-success" style="margin-left:4px" onclick="toggleUser(${u.id},true)">Ativar</button>`}
+    </td>
+  </tr>`).join('');
+}
+
+function openUserModal() {
+  document.getElementById('u-editing-id').value = '';
+  document.getElementById('user-modal-title').textContent = 'Novo Usuário';
+  ['u-nome','u-email','u-senha','u-cargo','u-matricula'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('u-role').value = 'tecnico';
+  document.getElementById('u-setor').value = 'ambos';
+  document.getElementById('u-senha-group').style.display = '';
+  openModal('modal-user');
+}
+
+function editUser(id, nome, email, role, setor, cargo, matricula) {
+  document.getElementById('u-editing-id').value = id;
+  document.getElementById('user-modal-title').textContent = 'Editar Usuário';
+  document.getElementById('u-nome').value = nome;
+  document.getElementById('u-email').value = email;
+  document.getElementById('u-role').value = role;
+  document.getElementById('u-setor').value = setor;
+  document.getElementById('u-cargo').value = cargo;
+  document.getElementById('u-matricula').value = matricula;
+  document.getElementById('u-senha-group').style.display = 'none';
+  openModal('modal-user');
+}
+
+async function saveUser() {
+  const id = document.getElementById('u-editing-id').value;
+  try {
+    if (id) {
+      await api('PUT', '/api/users/' + id, {
+        nome: document.getElementById('u-nome').value,
+        role: document.getElementById('u-role').value,
+        setor: document.getElementById('u-setor').value,
+        cargo: document.getElementById('u-cargo').value,
+        matricula: document.getElementById('u-matricula').value
+      });
+    } else {
+      await api('POST', '/api/users/', {
+        nome: document.getElementById('u-nome').value,
+        email: document.getElementById('u-email').value,
+        password: document.getElementById('u-senha').value,
+        role: document.getElementById('u-role').value,
+        setor: document.getElementById('u-setor').value,
+        cargo: document.getElementById('u-cargo').value,
+        matricula: document.getElementById('u-matricula').value
+      });
+    }
+    closeModal('modal-user');
+    loadUsers();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function toggleUser(id, ativo) {
+  if (!confirm(ativo ? 'Ativar usuário?' : 'Desativar usuário?')) return;
+  await api('PUT', '/api/users/' + id, { is_active: ativo });
+  loadUsers();
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function fmtDate(d) {
+  if (!d) return '—';
+  const parts = d.split('-');
+  return parts[2] + '/' + parts[1] + '/' + parts[0];
+}
+function formatNum(n) {
+  if (n == null) return '—';
+  return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+// Login on Enter
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
