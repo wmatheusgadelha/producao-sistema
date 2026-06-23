@@ -318,17 +318,39 @@ tr:hover td { background:#f8fafc; }
             <div class="form-row" style="margin-bottom:16px">
               <div class="form-group"><label>Linha *</label>
                 <select id="env-linha" required onchange="onLinhaChange()"><option value="">Selecione</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
-              <div class="form-group"><label>SKU / Produto *</label>
-                <select id="env-sku" required onchange="onSkuChange()"><option value="">— selecione a linha —</option></select></div>
+              <div class="form-group"><label>Operador(es)</label><input type="text" id="env-operador" placeholder="Nome do(s) operador(es)"></div>
             </div>
             <div class="form-row" style="margin-bottom:16px">
-              <div class="form-group"><label>Operador(es)</label><input type="text" id="env-operador" placeholder="Nome do(s) operador(es)"></div>
               <div class="form-group"><label>Tempo Disponível (min)</label><input type="number" id="env-tempo-disp" value="480" min="0"></div>
+              <div></div>
             </div>
-            <div id="cap-teorica-display" style="display:none;background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;margin-bottom:16px">
-              <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px">📊 Capacidade Teórica (Base de Dados)</div>
-              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px" id="cap-teorica-values"></div>
+
+            <!-- SKU 1 -->
+            <div style="background:#f0f9ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:14px;margin-bottom:8px">
+              <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px">📦 PRODUTO 1</div>
+              <div class="form-group" style="margin-bottom:8px"><label>SKU *</label>
+                <select id="env-sku" required onchange="onSkuChange(1)"><option value="">— selecione a linha primeiro —</option></select></div>
+              <div id="cap-teorica-display" style="display:none;background:#fff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;margin-top:8px">
+                <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px">📊 Capacidade Teórica</div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="cap-teorica-values"></div>
+              </div>
             </div>
+
+            <!-- SKU 2 opcional -->
+            <div id="sku2-container" style="display:none;background:#fff8ed;border:1.5px solid #fed7aa;border-radius:10px;padding:14px;margin-bottom:8px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <span style="font-size:12px;font-weight:700;color:#c2410c">📦 PRODUTO 2</span>
+                <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:none" onclick="removeSku2()">✕ Remover Produto 2</button>
+              </div>
+              <div class="form-group" style="margin-bottom:8px"><label>SKU 2</label>
+                <select id="env-sku2" onchange="onSkuChange(2)"><option value="">— selecione —</option></select></div>
+              <div id="cap-teorica-display2" style="display:none;background:#fff;border:1px solid #fed7aa;border-radius:8px;padding:12px;margin-top:8px">
+                <div style="font-size:11px;font-weight:700;color:#c2410c;margin-bottom:6px">📊 Capacidade Teórica — Produto 2</div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="cap-teorica-values2"></div>
+              </div>
+            </div>
+
+            <button type="button" id="btn-add-sku2" class="btn btn-outline btn-sm" onclick="addSku2()">➕ Adicionar 2º Produto no Turno</button>
           </div>
         </div>
 
@@ -364,15 +386,15 @@ tr:hover td { background:#f8fafc; }
         </div>
 
         <div class="table-card" style="margin-bottom:16px">
-          <div class="table-card-header"><h3>📦 Produção e Leituras</h3></div>
+          <div class="table-card-header"><h3>📦 Produção e Leituras — Produto 1</h3></div>
           <div class="modal-body">
             <div class="form-row" style="margin-bottom:16px">
               <div class="form-group"><label>Leitura Empacotadora (pacotes)</label><input type="number" id="env-leit-emp" min="0"></div>
               <div class="form-group"><label>Leitura Enfardadeira (fardos)</label><input type="number" id="env-leit-enf" min="0"></div>
             </div>
             <div class="form-row" style="margin-bottom:16px">
-              <div class="form-group"><label>Total Fardos Produzidos *</label><input type="number" id="env-fardos" min="0" required></div>
-              <div class="form-group"><label>Total KG Produzidos</label><input type="number" step="0.01" id="env-kg"></div>
+              <div class="form-group"><label>Total Fardos Produzidos *</label><input type="number" id="env-fardos" min="0" required oninput="calcTotalGeral()"></div>
+              <div class="form-group"><label>Total KG Produzidos</label><input type="number" step="0.01" id="env-kg" oninput="calcTotalGeral()"></div>
             </div>
             <div class="form-row" style="margin-bottom:16px">
               <div class="form-group"><label>Velocidade Real (PPM)</label><input type="number" step="0.1" id="env-ppm"></div>
@@ -381,6 +403,32 @@ tr:hover td { background:#f8fafc; }
             <div class="form-row">
               <div class="form-group"><label>Perda Emb. Empacotadora (KG)</label><input type="number" step="0.001" id="env-perda-emp"></div>
               <div class="form-group"><label>Perda Emb. Enfardadeira (KG)</label><input type="number" step="0.001" id="env-perda-enf"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRODUÇÃO SKU 2 -->
+        <div id="prod-sku2-card" class="table-card" style="margin-bottom:16px;display:none;border:1.5px solid #fed7aa">
+          <div class="table-card-header" style="background:#fff8ed"><h3 style="color:#c2410c">📦 Produção e Leituras — Produto 2</h3></div>
+          <div class="modal-body">
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group"><label>Total Fardos Produzidos</label><input type="number" id="env-fardos2" min="0" oninput="calcTotalGeral()"></div>
+              <div class="form-group"><label>Total KG Produzidos</label><input type="number" step="0.01" id="env-kg2" oninput="calcTotalGeral()"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Velocidade Real (PPM)</label><input type="number" step="0.1" id="env-ppm2"></div>
+              <div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOTAL GERAL (aparece quando há 2 produtos) -->
+        <div id="total-geral-card" class="table-card" style="margin-bottom:16px;display:none;background:#f0fdf4;border:1.5px solid #86efac">
+          <div class="modal-body" style="padding:14px">
+            <div style="font-size:12px;font-weight:700;color:var(--success);margin-bottom:8px">✅ TOTAL GERAL DO TURNO (Produto 1 + Produto 2)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div><span style="font-size:12px;color:var(--text-muted)">Total Fardos:</span> <strong id="total-geral-fardos" style="color:var(--success);font-size:16px">—</strong></div>
+              <div><span style="font-size:12px;color:var(--text-muted)">Total KG:</span> <strong id="total-geral-kg" style="color:var(--success);font-size:16px">—</strong></div>
             </div>
           </div>
         </div>
@@ -993,31 +1041,75 @@ function badge(val, good, warn) {
 // SKUs por linha baseado no cache de capacidade
 async function onLinhaChange() {
   const linha = parseInt(document.getElementById('env-linha').value);
-  const skuSel = document.getElementById('env-sku');
-  if (!linha) { skuSel.innerHTML = '<option value="">— selecione a linha —</option>'; return; }
+  const skuSel  = document.getElementById('env-sku');
+  const skuSel2 = document.getElementById('env-sku2');
+  if (!linha) {
+    skuSel.innerHTML = '<option value="">— selecione a linha primeiro —</option>';
+    skuSel2.innerHTML = '<option value="">— selecione —</option>';
+    document.getElementById('cap-teorica-display').style.display = 'none';
+    document.getElementById('cap-teorica-display2').style.display = 'none';
+    return;
+  }
   const skus = capCache.filter(c => c.linha === linha);
-  skuSel.innerHTML = '<option value="">Selecione o SKU</option>' +
-    skus.map(s => `<option value="${s.sku}" data-id="${s.id}">${s.sku}</option>`).join('');
+  const opts = '<option value="">Selecione o SKU</option>' + skus.map(s => `<option value="${s.sku}">${s.sku}</option>`).join('');
+  skuSel.innerHTML = opts;
+  skuSel2.innerHTML = '<option value="">— selecione —</option>' + skus.map(s => `<option value="${s.sku}">${s.sku}</option>`).join('');
   document.getElementById('cap-teorica-display').style.display = 'none';
+  document.getElementById('cap-teorica-display2').style.display = 'none';
 }
 
-function onSkuChange() {
+function onSkuChange(num) {
   const linha = parseInt(document.getElementById('env-linha').value);
-  const sku   = document.getElementById('env-sku').value;
+  const sku   = document.getElementById(num === 2 ? 'env-sku2' : 'env-sku').value;
   const cap   = capCache.find(c => c.linha === linha && c.sku === sku);
-  const disp  = document.getElementById('cap-teorica-display');
+  const dispId  = num === 2 ? 'cap-teorica-display2' : 'cap-teorica-display';
+  const valsId  = num === 2 ? 'cap-teorica-values2'  : 'cap-teorica-values';
+  const ppmId   = num === 2 ? 'env-ppm2' : 'env-ppm';
+  const disp = document.getElementById(dispId);
   if (!cap) { disp.style.display = 'none'; return; }
   disp.style.display = 'block';
-  document.getElementById('env-ppm').value = cap.velocidade_ppm || '';
-  // Preenche campo gramatura e pacotes automaticamente
-  document.getElementById('cap-teorica-values').innerHTML = `
-    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">PPM</div><div style="font-size:18px;font-weight:700;color:var(--primary)">${cap.velocidade_ppm}</div></div>
-    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">Fardos/Turno</div><div style="font-size:18px;font-weight:700;color:var(--success)">${cap.cap_fardo_turno || '—'}</div></div>
-    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">KG/Turno</div><div style="font-size:18px;font-weight:700;color:var(--secondary)">${cap.cap_kg_turno ? formatNum(cap.cap_kg_turno) : '—'}</div></div>
-    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">Pct/Fardo</div><div style="font-size:18px;font-weight:700;color:var(--text)">${cap.pacote_por_fardo || '—'}</div></div>
+  document.getElementById(ppmId).value = cap.velocidade_ppm || '';
+  document.getElementById(valsId).innerHTML = `
+    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">PPM</div><div style="font-size:16px;font-weight:700;color:var(--primary)">${cap.velocidade_ppm}</div></div>
+    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">Fardos/Turno</div><div style="font-size:16px;font-weight:700;color:var(--success)">${cap.cap_fardo_turno || '—'}</div></div>
+    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">KG/Turno</div><div style="font-size:16px;font-weight:700;color:var(--secondary)">${cap.cap_kg_turno ? formatNum(cap.cap_kg_turno) : '—'}</div></div>
+    <div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">Pct/Fardo</div><div style="font-size:16px;font-weight:700;color:var(--text)">${cap.pacote_por_fardo || '—'}</div></div>
   `;
-  if (!cap.validado) disp.style.background = '#fef9c3';
-  else disp.style.background = '#f0f9ff';
+}
+
+function addSku2() {
+  document.getElementById('sku2-container').style.display = 'block';
+  document.getElementById('prod-sku2-card').style.display = 'block';
+  document.getElementById('total-geral-card').style.display = 'block';
+  document.getElementById('btn-add-sku2').style.display = 'none';
+  // Popula opções do SKU2 com a mesma linha
+  onLinhaChange();
+}
+
+function removeSku2() {
+  document.getElementById('sku2-container').style.display = 'none';
+  document.getElementById('prod-sku2-card').style.display = 'none';
+  document.getElementById('total-geral-card').style.display = 'none';
+  document.getElementById('btn-add-sku2').style.display = '';
+  document.getElementById('env-sku2').value = '';
+  document.getElementById('env-fardos2').value = '';
+  document.getElementById('env-kg2').value = '';
+  document.getElementById('env-ppm2').value = '';
+  document.getElementById('cap-teorica-display2').style.display = 'none';
+  calcTotalGeral();
+}
+
+function calcTotalGeral() {
+  const f1 = parseInt(document.getElementById('env-fardos').value) || 0;
+  const f2 = parseInt(document.getElementById('env-fardos2')?.value) || 0;
+  const k1 = parseFloat(document.getElementById('env-kg').value) || 0;
+  const k2 = parseFloat(document.getElementById('env-kg2')?.value) || 0;
+  const totalF = f1 + f2;
+  const totalK = k1 + k2;
+  const elF = document.getElementById('total-geral-fardos');
+  const elK = document.getElementById('total-geral-kg');
+  if (elF) elF.textContent = totalF > 0 ? totalF + ' fardos' : '—';
+  if (elK) elK.textContent = totalK > 0 ? formatNum(totalK) + ' kg' : '—';
 }
 
 let paradasEnv = [];
@@ -1114,6 +1206,15 @@ function resetEnvaseForm() {
     if (el) el.value = id === 'env-tempo-disp' ? '480' : '';
   });
   document.getElementById('cap-teorica-display').style.display = 'none';
+  // Reset SKU2
+  document.getElementById('sku2-container').style.display = 'none';
+  document.getElementById('prod-sku2-card').style.display = 'none';
+  document.getElementById('total-geral-card').style.display = 'none';
+  document.getElementById('btn-add-sku2').style.display = '';
+  document.getElementById('cap-teorica-display2').style.display = 'none';
+  ['env-sku2','env-fardos2','env-kg2','env-ppm2'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
   paradasEnv = [];
   renderParadas('env');
 }
@@ -1147,10 +1248,20 @@ async function submitEnvase(e) {
     perda_peso_percentual: parseFloat(document.getElementById('env-perda-peso-pct').value) || null,
     perda_emb_empacotadora_kg: parseFloat(document.getElementById('env-perda-emp').value) || null,
     perda_emb_enfardadeira_kg: parseFloat(document.getElementById('env-perda-enf').value) || null,
-    total_fardos_produzidos: parseInt(document.getElementById('env-fardos').value) || null,
-    total_kg_produzidos: parseFloat(document.getElementById('env-kg').value) || null,
+    total_fardos_produzidos: (parseInt(document.getElementById('env-fardos').value)||0) + (parseInt(document.getElementById('env-fardos2')?.value)||0) || null,
+    total_kg_produzidos: (parseFloat(document.getElementById('env-kg').value)||0) + (parseFloat(document.getElementById('env-kg2')?.value)||0) || null,
     velocidade_real_ppm: parseFloat(document.getElementById('env-ppm').value) || null,
-    observacoes: document.getElementById('env-obs').value || null,
+    observacoes: (() => {
+      const obs = document.getElementById('env-obs').value || '';
+      const sku2 = document.getElementById('env-sku2')?.value;
+      const f2 = document.getElementById('env-fardos2')?.value;
+      const k2 = document.getElementById('env-kg2')?.value;
+      if (sku2) {
+        const info2 = `[Produto 2: ${sku2} — ${f2||0} fardos / ${k2||0} kg]`;
+        return obs ? obs + '\n' + info2 : info2;
+      }
+      return obs || null;
+    })(),
     paradas: paradasEnv.filter(p => p.ocorrencia).map(p => ({
       hora_inicio: p.hora_inicio || '00:00',
       hora_fim: p.hora_fim || null,
