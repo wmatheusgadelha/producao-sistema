@@ -342,23 +342,23 @@ tr:hover td { background:#f8fafc; }
           <div class="table-card-header"><h3>⚖️ Check de Peso</h3></div>
           <div class="modal-body">
             <div class="form-row-3" style="margin-bottom:12px">
-              <div class="form-group"><label>Peso Alto — Unidades</label><input type="number" id="env-pa-un" min="0"></div>
+              <div class="form-group"><label>Peso Alto — Unidades</label><input type="number" id="env-pa-un" min="0" oninput="calcPerdaPeso()"></div>
               <div class="form-group"><label>Peso Alto — KG</label><input type="number" step="0.001" id="env-pa-kg" min="0"></div>
               <div></div>
             </div>
             <div class="form-row-3" style="margin-bottom:12px">
-              <div class="form-group"><label>Peso Bom — Unidades</label><input type="number" id="env-pb-un" min="0"></div>
+              <div class="form-group"><label>Peso Bom — Unidades</label><input type="number" id="env-pb-un" min="0" oninput="calcPerdaPeso()"></div>
               <div class="form-group"><label>Peso Bom — KG</label><input type="number" step="0.001" id="env-pb-kg" min="0"></div>
               <div></div>
             </div>
             <div class="form-row-3" style="margin-bottom:12px">
-              <div class="form-group"><label>Peso Baixo — Unidades</label><input type="number" id="env-pbx-un" min="0"></div>
+              <div class="form-group"><label>Peso Baixo — Unidades</label><input type="number" id="env-pbx-un" min="0" oninput="calcPerdaPeso()"></div>
               <div class="form-group"><label>Peso Baixo — KG</label><input type="number" step="0.001" id="env-pbx-kg" min="0"></div>
               <div></div>
             </div>
             <div class="form-row">
               <div class="form-group"><label>Peso Médio (g)</label><input type="number" step="0.1" id="env-peso-medio"></div>
-              <div class="form-group"><label>Perda de Peso (%)</label><input type="number" step="0.01" id="env-perda-peso-pct"></div>
+              <div class="form-group"><label>Perda de Peso (%) <span style="font-size:10px;color:var(--primary)">(auto)</span></label><input type="number" step="0.01" id="env-perda-peso-pct" style="background:#f0f9ff" readonly></div>
             </div>
           </div>
         </div>
@@ -1052,9 +1052,9 @@ function renderParadas(tipo) {
         <button type="button" class="btn btn-sm btn-danger" onclick="removeParada('${tipo}',${i})">✕ Remover</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-        <div class="form-group"><label>Início</label><input type="time" value="${p.hora_inicio}" onchange="paradasEnv[${i}]||paradasMan; updateParada('${tipo}',${i},'hora_inicio',this.value)"></div>
-        <div class="form-group"><label>Fim</label><input type="time" value="${p.hora_fim}" onchange="updateParada('${tipo}',${i},'hora_fim',this.value)"></div>
-        <div class="form-group"><label>Minutos</label><input type="number" value="${p.tempo_minutos}" onchange="updateParada('${tipo}',${i},'tempo_minutos',this.value)" min="0" step="0.5"></div>
+        <div class="form-group"><label>Início</label><input type="time" id="parada-ini-${tipo}-${i}" value="${p.hora_inicio}" onchange="updateParada('${tipo}',${i},'hora_inicio',this.value); calcMinutosParada('${tipo}',${i})"></div>
+        <div class="form-group"><label>Fim</label><input type="time" id="parada-fim-${tipo}-${i}" value="${p.hora_fim}" onchange="updateParada('${tipo}',${i},'hora_fim',this.value); calcMinutosParada('${tipo}',${i})"></div>
+        <div class="form-group"><label>Minutos <span style="font-size:10px;color:var(--primary)">(auto)</span></label><input type="number" id="parada-min-${tipo}-${i}" value="${p.tempo_minutos || ''}" onchange="updateParada('${tipo}',${i},'tempo_minutos',this.value)" min="0" step="0.5" style="background:#f0f9ff"></div>
         <div class="form-group"><label>Categoria</label>
           <select onchange="updateParada('${tipo}',${i},'categoria',this.value)">
             <option value="">Selecione</option>
@@ -1062,15 +1062,41 @@ function renderParadas(tipo) {
           </select></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="form-group"><label>Ocorrência *</label><textarea rows="2" onchange="updateParada('${tipo}',${i},'ocorrencia',this.value)" placeholder="Descreva a ocorrência...">${p.ocorrencia}</textarea></div>
-        <div class="form-group"><label>Ação tomada</label><textarea rows="2" onchange="updateParada('${tipo}',${i},'acao',this.value)" placeholder="O que foi feito...">${p.acao}</textarea></div>
+        <div class="form-group"><label>Ocorrência *</label><textarea rows="2" onchange="updateParada('${tipo}',${i},'ocorrencia',this.value)" placeholder="Descreva a ocorrência...">${p.ocorrencia || ''}</textarea></div>
+        <div class="form-group"><label>Ação tomada</label><textarea rows="2" onchange="updateParada('${tipo}',${i},'acao',this.value)" placeholder="O que foi feito...">${p.acao || ''}</textarea></div>
       </div>
     </div>`).join('');
+}
+
+function calcMinutosParada(tipo, idx) {
+  const ini = document.getElementById(`parada-ini-${tipo}-${idx}`)?.value;
+  const fim = document.getElementById(`parada-fim-${tipo}-${idx}`)?.value;
+  if (!ini || !fim) return;
+  const [h1, m1] = ini.split(':').map(Number);
+  const [h2, m2] = fim.split(':').map(Number);
+  let minutos = (h2 * 60 + m2) - (h1 * 60 + m1);
+  if (minutos < 0) minutos += 24 * 60; // parada que passa da meia-noite
+  const campo = document.getElementById(`parada-min-${tipo}-${idx}`);
+  if (campo) {
+    campo.value = minutos;
+    updateParada(tipo, idx, 'tempo_minutos', minutos);
+  }
 }
 
 function updateParada(tipo, idx, field, val) {
   const list = tipo === 'env' ? paradasEnv : paradasMan;
   if (list[idx]) list[idx][field] = val;
+}
+
+function calcPerdaPeso() {
+  const alto  = parseFloat(document.getElementById('env-pa-un').value)  || 0;
+  const bom   = parseFloat(document.getElementById('env-pb-un').value)  || 0;
+  const baixo = parseFloat(document.getElementById('env-pbx-un').value) || 0;
+  const total = alto + bom + baixo;
+  if (total === 0) { document.getElementById('env-perda-peso-pct').value = ''; return; }
+  // Perda = unidades fora do peso (alto + baixo) / total
+  const perda = ((alto + baixo) / total) * 100;
+  document.getElementById('env-perda-peso-pct').value = perda.toFixed(2);
 }
 
 function resetEnvaseForm() {
